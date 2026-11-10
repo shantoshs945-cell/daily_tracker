@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#080B12" />
+  <title>4AM Club · IST Personal Routine & Outreach Tracker</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%2322d3ee'/%3E%3Cstop offset='100%25' stop-color='%23818cf8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Ctext x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-family='system-ui,sans-serif' font-weight='800' font-size='22' fill='%23061018'%3E4AM%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top Header -->
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">4AM</div>
+          <div class="brand-meta">
+            <h1 class="brand-title">4AM Club</h1>
+            <p class="brand-clock" id="liveClockIST">Loading IST time…</p>
+          </div>
+        </div>
+
+        <div class="topbar-actions">
+          <button type="button" class="btn btn-ghost btn-sm" id="quickExportBtn" title="Export JSON backup">
+            <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+            <span class="hide-xs">Export</span>
+          </button>
+          <button type="button" class="btn btn-outline btn-sm" id="openDataModalBtn">
+            <svg class="btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7v10c0 1.7 3.6 3 8 3s8-1.3 8-3V7M4 7c0 1.7 3.6 3 8 3s8-1.3 8-3M4 7c0-1.7 3.6-3 8-3s8 1.3 8 3"/></svg>
+            <span>Backup</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Sample Data Banner -->
+      <div class="sample-banner" id="sampleBanner" hidden>
+        <div class="sample-banner-inner">
+          <div class="sample-banner-text">
+            <span class="sample-dot" aria-hidden="true"></span>
+            <span><strong>Sample data active</strong> — explore all charts, or clear in one click to track fresh.</span>
+          </div>
+          <button type="button" class="btn btn-accent-soft btn-sm" id="clearSampleBtn">
+            Clear Sample Data
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="tab-nav-shell">
+      <nav class="tab-nav" aria-label="Primary sections">
+        <button type="button" class="tab-btn active" data-tab="today" id="tabBtnToday">
+          <span class="tab-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          </span>
+          <span>Today</span>
+        </button>
+        <button type="button" class="tab-btn" data-tab="week" id="tabBtnWeek">
+          <span class="tab-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>
+          </span>
+          <span>Week</span>
+        </button>
+        <button type="button" class="tab-btn" data-tab="month" id="tabBtnMonth">
+          <span class="tab-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+          </span>
+          <span>Month</span>
+        </button>
+        <button type="button" class="tab-btn" data-tab="compare" id="tabBtnCompare">
+          <span class="tab-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
+          </span>
+          <span>Compare</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Main Workspace -->
+    <main class="main-content">
+
+      <!-- ==================== TAB 1: TODAY ==================== -->
+      <section class="tab-panel active" id="panel-today" aria-labelledby="tabBtnToday">
+        <!-- Date Navigator & Hero Score -->
+        <div class="hero-grid">
+          <article class="card card-hero">
+            <div class="date-nav-row">
+              <div class="date-nav-controls">
+                <button type="button" class="icon-btn" id="prevDayBtn" aria-label="Previous day">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
+                </button>
+                <label class="date-picker-pill" title="Pick IST date">
+                  <span id="selectedDateLabel">Today</span>
+                  <input type="date" id="selectedDateInput" aria-label="Select date in IST" />
+                </label>
+                <button type="button" class="icon-btn" id="nextDayBtn" aria-label="Next day">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 18l6-6-6-6"/></svg>
+                </button>
+                <button type="button" class="btn btn-ghost btn-xs" id="jumpTodayBtn" hidden>Today</button>
+              </div>
+              <span class="schedule-badge" id="scheduleBadge">Weekday Schedule</span>
+            </div>
+
+            <div class="hero-body">
+              <div class="score-ring-wrap">
+                <svg class="score-ring" viewBox="0 0 120 120" aria-hidden="true">
+                  <circle class="score-ring-bg" cx="60" cy="60" r="50" />
+                  <circle class="score-ring-fill" id="dailyScoreRing" cx="60" cy="60" r="50" />
+                </svg>
+                <div class="score-ring-center">
+                  <span class="score-value" id="dailyScoreValue">0</span>
+                  <span class="score-sub">/ 100</span>
+                </div>
+              </div>
+
+              <div class="hero-stats">
+                <p class="hero-headline" id="dailyProgressHeadline">0 of 12 routine blocks</p>
+                <div class="hero-badges">
+                  <span class="status-pill" id="wakeTargetBadge">Wake not logged</span>
+                  <span class="status-pill status-pill-muted" id="dailyFocusBadge">0m focused</span>
+                </div>
+                <p class="hero-tip">Every checked block logs its exact IST timestamp and updates your score.</p>
+              </div>
+            </div>
+          </article>
+
+          <!-- Wake & Sleep Times Card -->
+          <article class="card card-sleep">
+            <div class="card-head">
+              <div>
+                <h2 class="card-title">Sleep &amp; 4 AM Wake-Up</h2>
+                <p class="card-subtitle">Target: wake ≤ 4:05 AM · sleep 9:30 PM IST</p>
+              </div>
+            </div>
+            <div class="sleep-inputs-grid">
+              <div class="field-box">
+                <label class="field-label" for="actualWakeInput">Actual Wake-Up (IST)</label>
+                <input type="time" id="actualWakeInput" class="time-input" />
+                <div class="chip-row">
+                  <button type="button" class="chip-btn" data-wake-preset="04:00">4:00 AM</button>
+                  <button type="button" class="chip-btn" data-wake-preset="04:05">4:05 AM</button>
+                  <button type="button" class="chip-btn" data-wake-preset="04:30">4:30 AM</button>
+                </div>
+              </div>
+              <div class="field-box">
+                <label class="field-label" for="actualSleepInput">Actual Sleep (IST)</label>
+                <input type="time" id="actualSleepInput" class="time-input" />
+                <div class="chip-row">
+                  <button type="button" class="chip-btn" data-sleep-preset="21:30">9:30 PM</button>
+                  <button type="button" class="chip-btn" data-sleep-preset="22:00">10:00 PM</button>
+                  <button type="button" class="chip-btn" data-sleep-preset="22:30">10:30 PM</button>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <!-- Daily Split: Checklist + Metrics/Notes -->
+        <div class="today-columns">
+          <!-- Routine Checklist -->
+          <article class="card card-checklist">
+            <div class="card-head">
+              <div>
+                <h2 class="card-title">Daily Routine Checklist</h2>
+                <p class="card-subtitle" id="routineSubtitle">Tap any block to mark done &amp; stamp IST time</p>
+              </div>
+              <span class="pill-counter" id="checklistCounter">0/12</span>
+            </div>
+            <div class="checklist-list" id="routineChecklist"></div>
+          </article>
+
+          <!-- Right column: Lead Calls + Focus Time + Note -->
+          <div class="today-side-stack">
+            <!-- Lead Calls -->
+            <article class="card">
+              <div class="card-head">
+                <div>
+                  <h2 class="card-title">US Lead Calls (4:10 – 5:30 AM)</h2>
+                  <p class="card-subtitle">Cold calls &amp; demo website outreach</p>
+                </div>
+                <span class="pill-accent" id="callRatePill">0% conv</span>
+              </div>
+              <div class="stepper-grid">
+                <div class="stepper-card">
+                  <span class="stepper-label">Calls Made</span>
+                  <div class="stepper-controls">
+                    <button type="button" class="step-btn" data-call-step="made" data-delta="-1" aria-label="Decrease calls made">−</button>
+                    <input type="number" min="0" inputmode="numeric" class="step-input" id="callsMadeInput" value="0" aria-label="Calls made" />
+                    <button type="button" class="step-btn step-btn-plus" data-call-step="made" data-delta="1" aria-label="Increase calls made">+</button>
+                  </div>
+                </div>
+                <div class="stepper-card">
+                  <span class="stepper-label">Conversations</span>
+                  <div class="stepper-controls">
+                    <button type="button" class="step-btn" data-call-step="conversations" data-delta="-1" aria-label="Decrease conversations">−</button>
+                    <input type="number" min="0" inputmode="numeric" class="step-input" id="callsConvoInput" value="0" aria-label="Conversations had" />
+                    <button type="button" class="step-btn step-btn-plus" data-call-step="conversations" data-delta="1" aria-label="Increase conversations">+</button>
+                  </div>
+                </div>
+                <div class="stepper-card">
+                  <span class="stepper-label">Demos Sent</span>
+                  <div class="stepper-controls">
+                    <button type="button" class="step-btn" data-call-step="demosSent" data-delta="-1" aria-label="Decrease demos sent">−</button>
+                    <input type="number" min="0" inputmode="numeric" class="step-input" id="callsDemosInput" value="0" aria-label="Demos sent" />
+                    <button type="button" class="step-btn step-btn-plus" data-call-step="demosSent" data-delta="1" aria-label="Increase demos sent">+</button>
+                  </div>
+                </div>
+                <div class="stepper-card">
+                  <span class="stepper-label">Replies / Follow-ups</span>
+                  <div class="stepper-controls">
+                    <button type="button" class="step-btn" data-call-step="replies" data-delta="-1" aria-label="Decrease replies">−</button>
+                    <input type="number" min="0" inputmode="numeric" class="step-input" id="callsRepliesInput" value="0" aria-label="Replies or follow-ups" />
+                    <button type="button" class="step-btn step-btn-plus" data-call-step="replies" data-delta="1" aria-label="Increase replies">+</button>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <!-- Minutes Spent -->
+            <article class="card">
+              <div class="card-head">
+                <div>
+                  <h2 class="card-title">Focus Time Logged (Minutes)</h2>
+                  <p class="card-subtitle">Drives your time-split charts across Today, Week &amp; Month</p>
+                </div>
+              </div>
+              <div class="minutes-grid">
+                <div class="min-field">
+                  <label class="min-label" for="minCallsInput">
+                    <span class="dot dot-calls"></span>Lead Calls (min)
+                  </label>
+                  <div class="min-input-row">
+                    <input type="number" min="0" max="1440" inputmode="numeric" class="num-input" id="minCallsInput" value="0" />
+                    <button type="button" class="chip-btn" data-min-add="calls" data-val="15">+15</button>
+                    <button type="button" class="chip-btn" data-min-set="calls" data-val="80">80m</button>
+                  </div>
+                </div>
+                <div class="min-field">
+                  <label class="min-label" for="minWorkoutInput">
+                    <span class="dot dot-workout"></span>Workout (min)
+                  </label>
+                  <div class="min-input-row">
+                    <input type="number" min="0" max="1440" inputmode="numeric" class="num-input" id="minWorkoutInput" value="0" />
+                    <button type="button" class="chip-btn" data-min-add="workout" data-val="15">+15</button>
+                    <button type="button" class="chip-btn" data-min-set="workout" data-val="45">45m</button>
+                  </div>
+                </div>
+                <div class="min-field">
+                  <label class="min-label" for="minStudiesInput">
+                    <span class="dot dot-studies"></span>Studies (min)
+                  </label>
+                  <div class="min-input-row">
+                    <input type="number" min="0" max="1440" inputmode="numeric" class="num-input" id="minStudiesInput" value="0" />
+                    <button type="button" class="chip-btn" data-min-add="studies" data-val="15">+15</button>
+                    <button type="button" class="chip-btn" data-min-set="studies" data-val="60">60m</button>
+                  </div>
+                </div>
+                <div class="min-field">
+                  <label class="min-label" for="minBuildInput">
+                    <span class="dot dot-build"></span>Build / Learn (min)
+                  </label>
+                  <div class="min-input-row">
+                    <input type="number" min="0" max="1440" inputmode="numeric" class="num-input" id="minBuildInput" value="0" />
+                    <button type="button" class="chip-btn" data-min-add="build" data-val="30">+30</button>
+                    <button type="button" class="chip-btn" data-min-set="build" data-val="30" id="buildPresetChip">30m</button>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <!-- Daily Note -->
+            <article class="card">
+              <div class="card-head">
+                <div>
+                  <h2 class="card-title">Daily Note</h2>
+                  <p class="card-subtitle">What I did / what went wrong</p>
+                </div>
+                <span class="save-indicator" id="noteSavedIndicator">Auto-saved</span>
+              </div>
+              <textarea
+                id="dailyNoteInput"
+                class="note-textarea"
+                rows="3"
+                placeholder="e.g., Called 25 Texas plumbers, sent 3 demo sites. Stayed focused after college..."
+              ></textarea>
+            </article>
+          </div>
+        </div>
+
+        <!-- Daily Pie Charts -->
+        <div class="charts-two-col">
+          <article class="card card-chart">
+            <div class="card-head">
+              <div>
+                <h2 class="card-title">Daily Time Split</h2>
+                <p class="card-subtitle">Calls vs Workout vs Studies vs Build</p>
+              </div>
+            </div>
+            <div class="chart-box">
+              <canvas id="dayTimeChart"></canvas>
+              <div class="chart-empty" id="dayTimeEmpty" hidden>Log minutes or check a block to see today's time split.</div>
+            </div>
+          </article>
+
+          <article class="card card-chart">
+            <div class="card-head">
+              <div>
+                <h2 class="card-title">Daily Blocks</h2>
+                <p class="card-subtitle">Completed vs Missed / Remaining</p>
+              </div>
+            </div>
+            <div class="chart-box">
+              <canvas id="dayBlocksChart"></canvas>
+              <div class="chart-empty" id="dayBlocksEmpty" hidden>No blocks scheduled.</div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 2: WEEK ==================== -->
+      <section class="tab-panel" id="panel-week" aria-labelledby="tabBtnWeek" hidden>
+        <article class="card period-nav-card">
+          <div class="period-nav-row">
+            <div class="date-nav-controls">
+              <button type="button" class="icon-btn" id="prevWeekBtn" aria-label="Previous week">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
+              </button>
+              <div class="period-title-wrap">
+                <h2 class="period-title" id="weekRangeTitle">This Week</h2>
+                <span class="period-sub" id="weekRangeSub">Mon – Sun (IST)</span>
+              </div>
+              <button type="button" class="icon-btn" id="nextWeekBtn" aria-label="Next week">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 18l6-6-6-6"/></svg>
+              </button>
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm" id="thisWeekBtn">This Week</button>
+          </div>
+        </article>
+
+        <!-- Mon - Sun Strip -->
+        <article class="card">
+          <div class="card-head">
+            <div>
+              <h2 class="card-title">Mon – Sun Completion Strip</h2>
+              <p class="card-subtitle">Daily routine score &amp; 4:00 AM hit indicator · tap any day to inspect</p>
+            </div>
+            <span class="pill-accent" id="weekAvgScorePill">Avg: 0%</span>
+          </div>
+          <div class="week-strip" id="weekStrip"></div>
+        </article>
+
+        <!-- Weekly Totals & Wake Stats -->
+        <div class="kpi-grid" id="weekKpiGrid"></div>
+
+        <!-- Weekly Pie Charts -->
+        <div class="charts-two-col">
+          <article class="card card-chart">
+            <div class="card-head">
+              <div>
+                <h2 class="card-title">Weekly Time Split</h2>
+                <p class="card-subtitle">Calls vs Workout vs Studies vs Build</p>
+              </div>
+            </div>
+            <div class="chart-box">
+              <canvas id="weekTimeChart"></canvas>
+              <div class="chart-empty" id="weekTimeEmpty" hidden>No focus minutes logged this week yet.</div>
+            </div>
+          </article>
+
+          <article class="card card-chart">
+            <div class="card-head">
+              <div>
+                <h2 class="card-title">Weekly Blocks</h2>
+                <p class="card-subtitle">Completed vs Missed across active days</p>
+              </div>
+            </div>
+            <div class="chart-box">
+              <canvas id="weekBlocksChart"></canvas>
+              <div class="chart-empty" id="weekBlocksEmpty" hidden>No tracked days in this week yet.</div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 3: MONTH ==================== -->
+      <section class="tab-panel" id="panel-month" aria-labelledby="tabBtnMonth" hidden>
+        <article class="card period-nav-card">
+          <div class="period-nav-row">
+            <div class="date-nav-controls">
+              <button type="button" class="icon-btn" id="prevMonthBtn" aria-label="Previous month">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
+              </button>
+              <div class="period-title-wrap">
+                <h2 class="period-title" id="monthTitle">November 2026</h2>
+                <span class="period-sub">IST Monthly Calendar &amp; Streaks</span>
+              </div>
+              <button type="button" class="icon-btn" id="nextMonthBtn" aria-label="Next month">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 18l6-6-6-6"/></svg>
+              </button>
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm" id="thisMonthBtn">This Month</button>
+          </div>
+        </article>
+
+        <!-- Streaks Cards -->
+        <div class="streak-grid">
+          <article class="card streak-card">
+            <div class="streak-badge streak-badge-amber">4:00 AM Wake-Up Streak</div>
+            <div class="streak-values">
+              <div>
+                <span class="streak-num" id="streak4AMCurrent">0</span>
+                <span class="streak-unit">day current</span>
+              </div>
+              <div class="streak-divider"></div>
+              <div>
+                <span class="streak-num streak-num-muted" id="streak4AMBest">0</span>
+                <span class="streak-unit">day best</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="card streak-card">
+            <div class="streak-badge streak-badge-green">100% All-Blocks Streak</div>
+            <div class="streak-values">
+              <div>
+                <span class="streak-num" id="streakAllCurrent">0</span>
+                <span class="streak-unit">day current</span>
+              </div>
+              <div class="streak-divider"></div>
+              <div>
+                <span class="streak-num streak-num-muted" id="streakAllBest">0</span>
+                <span class="streak-unit">day best</span>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <!-- Calendar Heatmap -->
+        <article class="card">
+          <div class="card-head heatmap-head">
+            <div>
+              <h2 class="card-title">Monthly Score Heatmap</h2>
+              <p class="card-subtitle">Each IST day colored by daily score (0–100)</p>
+            </div>
+            <div class="heatmap-legend" aria-label="Score color scale">
+              <span>0%</span>
+              <span class="heat-swatch heat-0"></span>
+              <span class="heat-swatch heat-1"></span>
+              <span class="heat-swatch heat-2"></span>
+              <span class="heat-swatch heat-3"></span>
+              <span class="heat-swatch heat-4"></span>
+              <span>100%</span>
+            </div>
+          </div>
+
+          <div class="heatmap-weekdays" aria-hidden="true">
+            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+          </div>
+          <div class="heatmap-grid" id="monthHeatmap"></div>
+
+          <div class="heatmap-inspector" id="heatmapInspector">
+            <span class="inspector-placeholder">Tap any day on the calendar to view summary or edit.</span>
+          </div>
+        </article>
+
+        <!-- Monthly Totals & Averages -->
+        <div class="kpi-grid" id="monthKpiGrid"></div>
+
+        <!-- Monthly Pie Charts -->
+        <div class="charts-two-col">
+          <article class="card card-chart">
+            <div class="card-head">
+              <div>
+                <h2 class="card-title">Monthly Time Split</h2>
+                <p class="card-subtitle">Calls vs Workout vs Studies vs Build</p>
+              </div>
+            </div>
+            <div class="chart-box">
+              <canvas id="monthTimeChart"></canvas>
+              <div class="chart-empty" id="monthTimeEmpty" hidden>No focus minutes logged this month yet.</div>
+            </div>
+          </article>
+
+          <article class="card card-chart">
+            <div class="card-head">
+              <div>
+                <h2 class="card-title">Monthly Blocks</h2>
+                <p class="card-subtitle">Completed vs Missed across active days</p>
+              </div>
+            </div>
+            <div class="chart-box">
+              <canvas id="monthBlocksChart"></canvas>
+              <div class="chart-empty" id="monthBlocksEmpty" hidden>No tracked days in this month yet.</div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 4: COMPARE ==================== -->
+      <section class="tab-panel" id="panel-compare" aria-labelledby="tabBtnCompare" hidden>
+        <article class="card period-nav-card">
+          <div class="compare-controls-row">
+            <div class="segmented" role="group" aria-label="Comparison period">
+              <button type="button" class="seg-btn active" data-compare-period="week" id="cmpWeekBtn">Last Week vs This Week</button>
+              <button type="button" class="seg-btn" data-compare-period="month" id="cmpMonthBtn">Last Month vs This Month</button>
+            </div>
+            <div class="segmented segmented-sm" id="comparePaceGroup" role="group" aria-label="Week comparison scope">
+              <button type="button" class="seg-btn active" data-compare-pace="pace" id="cmpPaceSameBtn">Same-Day Pace</button>
+              <button type="button" class="seg-btn" data-compare-pace="full" id="cmpPaceFullBtn">Full Week Totals</button>
+            </div>
+          </div>
+        </article>
+
+        <div class="compare-top-grid">
+          <!-- Improvement Score Donut -->
+          <article class="card card-improvement">
+            <div class="card-head">
+              <div>
+                <h2 class="card-title">Improvement Score</h2>
+                <p class="card-subtitle" id="improvementSubtitle">Composite delta vs previous week</p>
+              </div>
+            </div>
+            <div class="improvement-donut-wrap">
+              <div class="chart-box chart-box-donut">
+                <canvas id="improvementDonutChart"></canvas>
+                <div class="donut-center-overlay">
+                  <span class="improvement-pct" id="improvementPctValue">0%</span>
+                  <span class="improvement-dir" id="improvementDirLabel">Steady</span>
+                </div>
+              </div>
+              <div class="improvement-breakdown" id="improvementBreakdown"></div>
+            </div>
+          </article>
+
+          <!-- Side-by-Side Bar Chart -->
+          <article class="card card-compare-bar">
+            <div class="card-head">
+              <div>
+                <h2 class="card-title" id="compareBarTitle">Last Week vs This Week</h2>
+                <p class="card-subtitle">Green = up vs previous period · Red = down</p>
+              </div>
+              <div class="segmented segmented-xs" role="group" aria-label="Bar chart scale">
+                <button type="button" class="seg-btn active" data-bar-scale="normalized" id="barScaleNormBtn">Normalized %</button>
+                <button type="button" class="seg-btn" data-bar-scale="raw" id="barScaleRawBtn">Raw Values</button>
+              </div>
+            </div>
+            <div class="chart-box chart-box-bar">
+              <canvas id="compareBarChart"></canvas>
+            </div>
+          </article>
+        </div>
+
+        <!-- Metric-by-Metric Delta Breakdown -->
+        <article class="card">
+          <div class="card-head">
+            <div>
+              <h2 class="card-title">Key Metric Breakdown</h2>
+              <p class="card-subtitle" id="compareRangeLabel">Comparing all 8 core metrics</p>
+            </div>
+          </div>
+          <div class="delta-grid" id="compareDeltaGrid"></div>
+        </article>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Data Export / Import / Reset Modal -->
+  <div class="modal-backdrop" id="dataModal" hidden role="dialog" aria-modal="true" aria-labelledby="dataModalTitle">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 class="card-title" id="dataModalTitle">Backup &amp; Data Controls</h2>
+        <button type="button" class="icon-btn" id="closeDataModalBtn" aria-label="Close modal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <p class="modal-desc">All data stays privately in your browser’s <code>localStorage</code>. Export a JSON backup regularly or move data between phone and laptop.</p>
+
+      <div class="modal-actions-stack">
+        <button type="button" class="btn btn-primary btn-block" id="modalExportBtn">
+          Export Data as JSON File
+        </button>
+
+        <label class="btn btn-outline btn-block file-upload-btn">
+          <span>Import Data from JSON File</span>
+          <input type="file" id="importFileInput" accept=".json,application/json" />
+        </label>
+
+        <div class="modal-divider"></div>
+
+        <button type="button" class="btn btn-ghost btn-block" id="modalLoadSampleBtn">
+          Load 36-Day Sample Dataset
+        </button>
+        <button type="button" class="btn btn-danger-soft btn-block" id="modalClearAllBtn">
+          Clear All Data (Start Empty)
+        </button>
+      </div>
+      <p class="modal-status" id="modalStatusMsg" aria-live="polite"></p>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toastEl" role="status" aria-live="polite" hidden></div>
+
+  <!-- Scripts (works offline & file:// without bundler) -->
+  <script src="vendor/chart.umd.min.js" defer></script>
+  <script src="js/ist.js" defer></script>
+  <script src="js/routine.js" defer></script>
+  <script src="js/metrics.js" defer></script>
+  <script src="js/sampleData.js" defer></script>
+  <script src="js/storage.js" defer></script>
+  <script src="js/charts.js" defer></script>
+  <script src="js/app.js" defer></script>
+</body>
+</html>
