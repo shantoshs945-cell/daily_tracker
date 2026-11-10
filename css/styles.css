@@ -199,40 +199,6 @@ button {
   background: var(--accent-soft);
 }
 
-/* Sample Banner */
-.sample-banner {
-  background: linear-gradient(90deg, rgba(245, 158, 11, 0.14), rgba(34, 211, 238, 0.1));
-  border-top: 1px solid rgba(245, 158, 11, 0.25);
-}
-
-.sample-banner-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 8px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.sample-banner-text {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.8rem;
-  color: #fde68a;
-}
-
-.sample-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: var(--amber);
-  box-shadow: 0 0 10px var(--amber);
-  flex-shrink: 0;
-}
-
 /* ==================== BUTTONS & CONTROLS ==================== */
 .btn {
   display: inline-flex;
@@ -294,16 +260,6 @@ button {
 
 .btn-ghost:hover {
   background: rgba(148, 163, 184, 0.16);
-}
-
-.btn-accent-soft {
-  background: rgba(245, 158, 11, 0.2);
-  border-color: rgba(245, 158, 11, 0.45);
-  color: #fef3c7;
-}
-
-.btn-accent-soft:hover {
-  background: rgba(245, 158, 11, 0.3);
 }
 
 .btn-danger-soft {

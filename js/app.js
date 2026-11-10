@@ -8,7 +8,7 @@
   const Charts = global.Tracker.Charts;
 
   let todayIST = IST.getTodayIST();
-  let state = Storage.loadState(localStorage, todayIST);
+  let state = Storage.loadState(localStorage);
 
   const ui = {
     activeTab: 'today',
@@ -79,12 +79,6 @@
     }
   }
 
-  function syncSampleBanner() {
-    const banner = document.getElementById('sampleBanner');
-    if (!banner) return;
-    banner.hidden = !state.isSampleData;
-  }
-
   const TAB_CHARTS = {
     today: ['dayTimeChart', 'dayBlocksChart'],
     week: ['weekTimeChart', 'weekBlocksChart'],
@@ -113,7 +107,6 @@
   }
 
   function renderActivePanel() {
-    syncSampleBanner();
     if (ui.activeTab === 'today') renderTodayPanel();
     else if (ui.activeTab === 'week') renderWeekPanel();
     else if (ui.activeTab === 'month') renderMonthPanel();
@@ -637,13 +630,6 @@
       btn.addEventListener('click', () => switchTab(btn.dataset.tab));
     });
 
-    // Clear Sample Data (One Click)
-    document.getElementById('clearSampleBtn')?.addEventListener('click', () => {
-      state = Storage.clearAllToEmpty(localStorage);
-      renderActivePanel();
-      showToast('Sample data cleared. Ready for your real routine!');
-    });
-
     // Quick Export & Modal
     document.getElementById('quickExportBtn')?.addEventListener('click', exportBackupFile);
     document.getElementById('openDataModalBtn')?.addEventListener('click', openDataModal);
@@ -653,13 +639,6 @@
     });
 
     document.getElementById('modalExportBtn')?.addEventListener('click', exportBackupFile);
-
-    document.getElementById('modalLoadSampleBtn')?.addEventListener('click', () => {
-      state = Storage.resetToSample(localStorage, todayIST);
-      closeDataModal();
-      renderActivePanel();
-      showToast('Loaded 36-day sample dataset.');
-    });
 
     document.getElementById('modalClearAllBtn')?.addEventListener('click', () => {
       state = Storage.clearAllToEmpty(localStorage);

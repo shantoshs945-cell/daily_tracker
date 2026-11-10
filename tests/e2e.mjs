@@ -67,10 +67,13 @@ async function run() {
   try {
     await page.goto(url, { waitUntil: 'networkidle' });
 
-    // 1. Verify IST clock & sample data active on first load
-    await page.waitForSelector('#sampleBanner:not([hidden])');
+    // 1. Verify IST clock & clean empty initial state (no sample banner or sample buttons)
     const clockText = await page.textContent('#liveClockIST');
     assert.match(clockText, /IST$/);
+    assert.equal(await page.locator('#sampleBanner').count(), 0);
+    assert.equal(await page.locator('#clearSampleBtn').count(), 0);
+    assert.equal(await page.locator('#modalLoadSampleBtn').count(), 0);
+    assert.equal(await page.textContent('#dailyScoreValue'), '0');
 
     // Verify mobile layout has zero horizontal overflow
     const mobileOverflow = await page.evaluate(() => ({
@@ -82,35 +85,27 @@ async function run() {
       `Mobile horizontal overflow detected: ${JSON.stringify(mobileOverflow)}`
     );
 
-    // 2. Verify initial sample charts have non-empty data
+    // 2. Verify initial empty charts start at zero
     const initialDayTime = await page.evaluate(() => window.Tracker.Charts.getChartSnapshot('dayTimeChart'));
-    assert.ok(initialDayTime && initialDayTime.datasets[0].data.some((v) => v > 0), 'Sample dayTimeChart should have data');
+    assert.deepEqual(initialDayTime.datasets[0].data, [0, 0, 0, 0]);
 
-    // Switch through Week, Month, Compare with sample data to verify all charts render cleanly
+    // Switch through Week, Month, Compare on empty state cleanly
     await page.click('#tabBtnWeek');
-    const sampleWeekTime = await page.evaluate(() => window.Tracker.Charts.getChartSnapshot('weekTimeChart'));
-    assert.ok(sampleWeekTime && sampleWeekTime.datasets[0].data.some((v) => v > 0), 'Sample weekTimeChart should have data');
+    const emptyWeekTime = await page.evaluate(() => window.Tracker.Charts.getChartSnapshot('weekTimeChart'));
+    assert.deepEqual(emptyWeekTime.datasets[0].data, [0, 0, 0, 0]);
 
     await page.click('#tabBtnMonth');
-    const sampleMonthTime = await page.evaluate(() => window.Tracker.Charts.getChartSnapshot('monthTimeChart'));
-    assert.ok(sampleMonthTime && sampleMonthTime.datasets[0].data.some((v) => v > 0), 'Sample monthTimeChart should have data');
+    const emptyMonthTime = await page.evaluate(() => window.Tracker.Charts.getChartSnapshot('monthTimeChart'));
+    assert.deepEqual(emptyMonthTime.datasets[0].data, [0, 0, 0, 0]);
 
     await page.click('#tabBtnCompare');
-    const sampleCompareBar = await page.evaluate(() => window.Tracker.Charts.getChartSnapshot('compareBarChart'));
-    assert.equal(sampleCompareBar.datasets[0].data.length, 8);
-    assert.equal(sampleCompareBar.datasets[1].data.length, 8);
+    const emptyCompareBar = await page.evaluate(() => window.Tracker.Charts.getChartSnapshot('compareBarChart'));
+    assert.equal(emptyCompareBar.datasets[0].data.length, 8);
+    assert.equal(emptyCompareBar.datasets[1].data.length, 8);
 
-    // 3. One-click Clear Sample Data
     await page.click('#tabBtnToday');
-    await page.click('#clearSampleBtn');
-    const isBannerHidden = await page.isHidden('#sampleBanner');
-    assert.equal(isBannerHidden, true, 'Sample banner must hide immediately on clear');
-    assert.equal(await page.textContent('#dailyScoreValue'), '0');
 
-    const clearedDayTime = await page.evaluate(() => window.Tracker.Charts.getChartSnapshot('dayTimeChart'));
-    assert.deepEqual(clearedDayTime.datasets[0].data, [0, 0, 0, 0]);
-
-    // 4. Add real data on Today & verify charts update dynamically
+    // 3. Add real data on Today & verify charts update dynamically
     await page.click('[data-wake-preset="04:00"]');
     await page.click('[data-sleep-preset="21:30"]');
 
@@ -244,14 +239,14 @@ async function run() {
       if (msg.type() === 'error') fileErrors.push(msg.text());
     });
     await filePage.goto(fileUrl, { waitUntil: 'load' });
-    await filePage.waitForSelector('#sampleBanner:not([hidden])');
+    await filePage.waitForSelector('#dailyScoreValue');
     const fileChart = await filePage.evaluate(() => window.Tracker.Charts.getChartSnapshot('dayTimeChart'));
-    assert.ok(fileChart && fileChart.datasets[0].data.some((v) => v > 0), 'file:// mode must load Chart.js cleanly');
+    assert.ok(fileChart && fileChart.datasets[0].data.length === 4, 'file:// mode must load Chart.js cleanly');
     assert.deepEqual(fileErrors, [], `file:// mode errors: ${fileErrors.join('; ')}`);
     await filePage.close();
 
     assert.deepEqual(errors, [], `Console/page errors occurred: ${errors.join('; ')}`);
-    console.log('ALL E2E CHECKS PASSED (mobile + desktop, sample clear, live chart updates, export/import, reload persistence, file:// mode).');
+    console.log('ALL E2E CHECKS PASSED (mobile + desktop, empty start, live chart updates, export/import, reload persistence, file:// mode).');
   } finally {
     await browser.close();
     server.closeAllConnections?.();

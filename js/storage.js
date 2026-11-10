@@ -3,17 +3,18 @@
 
   const IST = global.Tracker && global.Tracker.IST ? global.Tracker.IST : require('./ist.js');
   const Routine = global.Tracker && global.Tracker.Routine ? global.Tracker.Routine : require('./routine.js');
-  const SampleData = global.Tracker && global.Tracker.SampleData ? global.Tracker.SampleData : require('./sampleData.js');
 
   const STORAGE_KEY = 'ist_routine_tracker_v1';
 
-  function sanitizeState(raw) {
-    const clean = {
+  function createEmptyState() {
+    return {
       version: 1,
-      isSampleData: Boolean(raw && raw.isSampleData),
-      sampleCleared: Boolean(raw && raw.sampleCleared),
       days: {},
     };
+  }
+
+  function sanitizeState(raw) {
+    const clean = createEmptyState();
 
     if (raw && raw.days && typeof raw.days === 'object' && !Array.isArray(raw.days)) {
       for (const [dateStr, dayData] of Object.entries(raw.days)) {
@@ -25,31 +26,29 @@
     return clean;
   }
 
-  function loadState(storageObj = typeof localStorage !== 'undefined' ? localStorage : null, todayIST = IST.getTodayIST()) {
+  function loadState(storageObj = typeof localStorage !== 'undefined' ? localStorage : null) {
     if (!storageObj) {
-      return SampleData.createSampleState(todayIST);
+      return createEmptyState();
     }
 
     try {
       const rawText = storageObj.getItem(STORAGE_KEY);
       if (!rawText) {
-        const seeded = SampleData.createSampleState(todayIST);
-        saveState(seeded, storageObj);
-        return seeded;
+        return createEmptyState();
       }
       const parsed = JSON.parse(rawText);
       if (!parsed || typeof parsed !== 'object') {
         throw new Error('Invalid state payload');
       }
+      // Clear legacy pre-seeded sample data if present from an earlier visit
+      if (parsed.isSampleData) {
+        const empty = createEmptyState();
+        saveState(empty, storageObj);
+        return empty;
+      }
       return sanitizeState(parsed);
     } catch (_err) {
-      const fresh = {
-        version: 1,
-        isSampleData: false,
-        sampleCleared: true,
-        days: {},
-      };
-      return fresh;
+      return createEmptyState();
     }
   }
 
@@ -64,20 +63,9 @@
   }
 
   function clearAllToEmpty(storageObj = typeof localStorage !== 'undefined' ? localStorage : null) {
-    const empty = {
-      version: 1,
-      isSampleData: false,
-      sampleCleared: true,
-      days: {},
-    };
+    const empty = createEmptyState();
     saveState(empty, storageObj);
     return empty;
-  }
-
-  function resetToSample(storageObj = typeof localStorage !== 'undefined' ? localStorage : null, todayIST = IST.getTodayIST()) {
-    const seeded = SampleData.createSampleState(todayIST);
-    saveState(seeded, storageObj);
-    return seeded;
   }
 
   function buildExportPayload(state, now = new Date()) {
@@ -88,7 +76,6 @@
       version: 1,
       timezone: IST.IST_TIMEZONE,
       exportedAtIST: `${clock.dateStr} ${clock.time24} IST`,
-      isSampleData: clean.isSampleData,
       days: clean.days,
     };
   }
@@ -132,8 +119,6 @@
       importedCount: count,
       state: {
         version: 1,
-        isSampleData: false,
-        sampleCleared: true,
         days: importedDays,
       },
     };
@@ -141,11 +126,11 @@
 
   const api = {
     STORAGE_KEY,
+    createEmptyState,
     sanitizeState,
     loadState,
     saveState,
     clearAllToEmpty,
-    resetToSample,
     buildExportPayload,
     parseImportJson,
   };
@@ -157,4 +142,3 @@
     module.exports = api;
   }
 })(typeof window !== 'undefined' ? window : globalThis);
-

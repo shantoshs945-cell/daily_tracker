@@ -4,7 +4,6 @@ const assert = require('node:assert/strict');
 const IST = require('../js/ist.js');
 const Routine = require('../js/routine.js');
 const Metrics = require('../js/metrics.js');
-const SampleData = require('../js/sampleData.js');
 const Storage = require('../js/storage.js');
 
 test('IST date and time conversions handle UTC midnight boundaries accurately', () => {
@@ -116,18 +115,45 @@ test('Metrics compute streaks, period aggregates, and comparison deltas accurate
   assert.ok(cmp.improvementScore > 0);
 });
 
-test('Sample data and JSON export/import round-trip safely', () => {
-  const sample = SampleData.createSampleState('2026-11-10');
-  assert.equal(sample.isSampleData, true);
-  assert.equal(Object.keys(sample.days).length, 36);
+test('Storage starts empty, migrates legacy sample data, and validates export/import', () => {
+  const store = new Map();
+  const mockStorage = {
+    getItem: (k) => (store.has(k) ? store.get(k) : null),
+    setItem: (k, v) => store.set(k, v),
+  };
 
-  const payload = Storage.buildExportPayload(sample, new Date('2026-11-10T10:00:00Z'));
-  const jsonText = JSON.stringify(payload);
-  const parsed = Storage.parseImportJson(jsonText);
+  // Fresh storage starts completely empty
+  const fresh = Storage.loadState(mockStorage);
+  assert.deepEqual(fresh.days, {});
+
+  // Legacy sample data from earlier session is automatically cleared
+  mockStorage.setItem(Storage.STORAGE_KEY, JSON.stringify({
+    version: 1,
+    isSampleData: true,
+    days: { '2026-11-10': Routine.createEmptyDay('2026-11-10') },
+  }));
+  const migrated = Storage.loadState(mockStorage);
+  assert.deepEqual(migrated.days, {});
+
+  // Real data export/import round-trip
+  const realState = {
+    version: 1,
+    days: {
+      '2026-11-10': {
+        ...Routine.createEmptyDay('2026-11-10'),
+        wakeTime: '04:00',
+        calls: { made: 22, conversations: 6, demosSent: 2, replies: 1 },
+        minutes: { calls: 80, workout: 45, studies: 60, build: 30 },
+        note: 'Good outreach morning',
+      },
+    },
+  };
+  const payload = Storage.buildExportPayload(realState, new Date('2026-11-10T10:00:00Z'));
+  const parsed = Storage.parseImportJson(JSON.stringify(payload));
 
   assert.equal(parsed.ok, true);
-  assert.equal(parsed.importedCount, 36);
-  assert.equal(parsed.state.isSampleData, false);
+  assert.equal(parsed.importedCount, 1);
+  assert.equal(parsed.state.days['2026-11-10'].calls.made, 22);
 
   const badResult = Storage.parseImportJson('{ invalid json');
   assert.equal(badResult.ok, false);
